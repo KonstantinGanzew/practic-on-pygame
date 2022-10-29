@@ -35,6 +35,7 @@ def get_empty_list(mas):
     return empty
 
 def move_left(mas: list):
+    delta = 0
     for row in mas:
         while 0 in row:
             row.remove(0)
@@ -44,11 +45,13 @@ def move_left(mas: list):
         for j in range(3):
             if mas[i][j] == mas[i][j+1] and mas[i][j] != 0:
                 mas[i][j] *= 2
+                delta += mas[i][j]
                 mas[i].pop(j+1)
                 mas[i].append(0)
-    return mas
+    return mas, delta
 
 def move_right(mas):
+    delta = 0
     for row in mas:
         while 0 in row:
             row.remove(0)
@@ -58,6 +61,35 @@ def move_right(mas):
         for j in range(3, 0, -1):
             if mas[i][j] == mas[i][j - 1] and mas[i][j] != 0:
                 mas[i][j] *= 2
+                delta += mas[i][j]
                 mas[i].pop(j-1)
                 mas[i].insert(0, 0)
-    return mas
+    return mas, delta
+
+def trans(m):
+    res = []
+    for i in range(len(m[0])):
+        buf = []
+        for row in m:
+            buf.append(row[i])
+        res.append(buf)
+    return res
+
+def move_up(mas):
+    mas = trans(mas)
+    mas, delta = move_left(mas)
+    mas = trans(mas)
+    return mas, delta
+
+def move_down(mas):
+    mas = trans(mas)
+    mas, delta = move_right(mas)
+    mas = trans(mas)
+    return mas, delta
+
+def can_move(mas):
+    for i in range(3):
+        for j in range(3):
+            if mas[i][j] == mas[i][j + 1] or mas[i][j] == mas[i + 1][j]:
+                return True
+    return False
