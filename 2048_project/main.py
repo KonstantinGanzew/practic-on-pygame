@@ -2,6 +2,7 @@ import sys
 import pygame
 from logics import *
 from database import *
+import json
 
 GAMERS_DB = get_best()
 
@@ -19,21 +20,21 @@ def init_const():
     mas = insert_2_of_4(mas, x2, y2)
 
 def draw_top_gamers():
-    font_top = pygame.font.SysFont('simsun', 30)
-    font_gamer = pygame.font.SysFont('simsun', 24)
+    font_top = pygame.font.SysFont('comicsansms', 25)
+    font_gamer = pygame.font.SysFont('comicsansms', 20)
     text_head = font_top.render('Best tries: ', True, COLOR_TEXT)
-    screen.blit(text_head, (250, 5))
+    screen.blit(text_head, (240, 5))
     for index, gamer in enumerate(GAMERS_DB):
         name, score = gamer
         s = f'{index + 1}. {name} - {score}'
         text_gamer = font_gamer.render(s, True, COLOR_TEXT)
-        screen.blit(text_gamer, (250, 30 + 30 * index))
+        screen.blit(text_gamer, (240, 30 + 20 * index))
 
 def draw_interface(score, delta = 0):
     pygame.draw.rect(screen, WHITE, TITLE_REC)  
-    font = pygame.font.SysFont('stxingkai', 70)
-    font_score = pygame.font.SysFont('simsun', 42)
-    font_delta = pygame.font.SysFont('simsun', 30)
+    font = pygame.font.SysFont('comicsansms', 70)
+    font_score = pygame.font.SysFont('comicsansms', 42)
+    font_delta = pygame.font.SysFont('comicsansms', 30)
     text_score = font_score.render('Score: ', True, COLOR_TEXT)
     text_score_value = font_score.render(f'{score}', True, COLOR_TEXT)
     screen.blit(text_score, (20, 35))
@@ -41,7 +42,6 @@ def draw_interface(score, delta = 0):
     if delta > 0:
         text_delta = font_delta.render(f' + {delta}', True, COLOR_TEXT)
         screen.blit(text_delta, (135, 75))
-    pretty_print(mas)
     draw_top_gamers()
     for row in range(BLOCKS):
         for column in range(BLOCKS):
@@ -55,8 +55,6 @@ def draw_interface(score, delta = 0):
                 text_x = w + (SIZE_BLOCK - font_w) / 2
                 text_y = h + (SIZE_BLOCK - font_h) / 2
                 screen.blit(text, (text_x, text_y))
-
-mas = None
 
 COLOR_TEXT = (255, 127, 0)
 COLORS = {
@@ -75,6 +73,19 @@ COLORS = {
 }
 
 USERNAME = None
+mas = None
+score = None
+path = os.getcwd()
+if 'data.txt' in os.listdir():
+    with open('data.txt') as file:
+        data = json.load(file)
+        mas = data['mas']
+        score = data['score']
+        USERNAME = data['user']
+    full_path = os.path.join(path, 'data.txt')
+    os.remove(full_path)
+else:
+    init_const()
 WHITE = (255, 255, 255)
 GRAY = (130, 130, 130)
 BLACK = (0, 0, 0)
@@ -84,8 +95,6 @@ MARGIN = 10
 WIDTH = BLOCKS * SIZE_BLOCK + (BLOCKS + 1) * MARGIN
 HEIGTH = WIDTH + 110
 TITLE_REC = pygame.Rect(0, 0, WIDTH, 110)
-score = None
-init_const()
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGTH))
@@ -93,12 +102,11 @@ pygame.display.set_caption('2048')
 
 def draw_intro():
     img2028 = pygame.image.load('2048_project\\dog.jpg')
-    font = pygame.font.SysFont('stxingkai', 72)
+    font = pygame.font.SysFont('comicsansms', 52)
     text_welcome = font.render('Welcome!', True, WHITE)
     name = 'Введите имя'
     is_find_name = False
     while not is_find_name:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -124,7 +132,6 @@ def draw_intro():
                         USERNAME = 'Чмо'
                         is_find_name = True
                         break
-        screen.fill(BLACK)
         text_name = font.render(name, True, WHITE)
         rect_name = text_name.get_rect()
         rect_name.center = screen.get_rect().center
@@ -132,43 +139,54 @@ def draw_intro():
         screen.blit(text_welcome, (235, 120))
         screen.blit(text_name, rect_name)
         pygame.display.update()
+    screen.fill(BLACK)
+
+def save_game():
+    data = {
+        'user': USERNAME,
+        'score': score,
+        'mas': mas
+    }
+    with open('data.txt', 'w') as outfile:
+        json.dump(data, outfile)
 
 def game_loop():
     global score, mas
     draw_interface(score)
     pygame.display.update()
-
+    is_mas_move = False
     while is_zero_in_mas(mas) or can_move(mas):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                save_game()
                 pygame.quit()
                 sys.exit(0)
             elif event.type == pygame.KEYDOWN:
                 delta = 0
                 if event.key == pygame.K_LEFT:
-                    mas, delta = move_left(mas)
+                    mas, delta, is_mas_move = move_left(mas)
                 elif event.key == pygame.K_RIGHT:
-                    mas, delta = move_right(mas)
+                    mas, delta, is_mas_move = move_right(mas)
                 elif event.key == pygame.K_UP:
-                    mas, delta = move_up(mas)
+                    mas, delta, is_mas_move = move_up(mas)
                 elif event.key == pygame.K_DOWN:
-                    mas, delta = move_down(mas)
-                if is_zero_in_mas(mas):
+                    mas, delta, is_mas_move = move_down(mas)
+                if is_zero_in_mas(mas) and is_mas_move:
                     empty = get_empty_list(mas)
                     random.shuffle(empty)
                     random_num = empty.pop()
                     x, y = get_index_from_number(random_num)
                     mas = insert_2_of_4(mas, x, y)
-                    print(f'Мы заполнили элемент под номером {random_num}')
+                    is_mas_move = False
                 score += delta
                 draw_interface(score, delta)
                 pygame.display.update()
     screen.fill(BLACK)
 
 def draw_game_over():
-    global USERNAME, mas
+    global USERNAME, mas, GAMERS_DB
     img2028 = pygame.image.load('2048_project\\dog.jpg')
-    font = pygame.font.SysFont('stxingkai', 65)
+    font = pygame.font.SysFont('comicsansms', 40)
     text_game_over = font.render('Game over!', True, WHITE)
     text_score = font.render(f'Вы набрали {score}', True, WHITE)
     text = 'Рекорд побит'
@@ -180,6 +198,7 @@ def draw_game_over():
         text = f'Рекорд {best_score}'
     text_record = font.render(text, True, WHITE)
     insert_result(USERNAME, score)
+    GAMERS_DB = get_best()
     make_disicion = False
     while not make_disicion:
         for event in pygame.event.get():

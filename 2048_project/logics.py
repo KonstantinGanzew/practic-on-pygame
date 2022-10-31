@@ -1,4 +1,6 @@
 import random
+import copy
+import os
 
 def pretty_print(mas):
     for row in mas:
@@ -35,6 +37,7 @@ def get_empty_list(mas):
     return empty
 
 def move_left(mas: list):
+    origin = copy.deepcopy(mas)
     delta = 0
     for row in mas:
         while 0 in row:
@@ -48,9 +51,10 @@ def move_left(mas: list):
                 delta += mas[i][j]
                 mas[i].pop(j+1)
                 mas[i].append(0)
-    return mas, delta
+    return mas, delta, not origin == mas
 
 def move_right(mas):
+    origin = copy.deepcopy(mas)
     delta = 0
     for row in mas:
         while 0 in row:
@@ -64,7 +68,7 @@ def move_right(mas):
                 delta += mas[i][j]
                 mas[i].pop(j-1)
                 mas[i].insert(0, 0)
-    return mas, delta
+    return mas, delta, not origin == mas
 
 def trans(m):
     res = []
@@ -77,19 +81,23 @@ def trans(m):
 
 def move_up(mas):
     mas = trans(mas)
-    mas, delta = move_left(mas)
+    mas, delta, origin = move_left(mas)
     mas = trans(mas)
-    return mas, delta
+    return mas, delta, origin
 
 def move_down(mas):
     mas = trans(mas)
-    mas, delta = move_right(mas)
+    mas, delta, origin = move_right(mas)
     mas = trans(mas)
-    return mas, delta
+    return mas, delta, origin
 
 def can_move(mas):
     for i in range(3):
         for j in range(3):
             if mas[i][j] == mas[i][j + 1] or mas[i][j] == mas[i + 1][j]:
+                return True
+    for i in range(1, 4):
+        for j in range(1, 4):
+            if mas[i][j] == mas[i - 1][j] or mas[i][j] == mas[i][j - 1]:
                 return True
     return False
