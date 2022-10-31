@@ -1,11 +1,20 @@
-from cgitb import text
 import sys
 import pygame
 from logics import *
 from database import *
 
+GAMERS_DB = get_best()
+
 def draw_top_gamers():
-    pass
+    font_top = pygame.font.SysFont('simsun', 30)
+    font_gamer = pygame.font.SysFont('simsun', 24)
+    text_head = font_top.render('Best tries: ', True, COLOR_TEXT)
+    screen.blit(text_head, (250, 5))
+    for index, gamer in enumerate(GAMERS_DB):
+        name, score = gamer
+        s = f'{index + 1}. {name} - {score}'
+        text_gamer = font_gamer.render(s, True, COLOR_TEXT)
+        screen.blit(text_gamer, (250, 30 + 30 * index))
 
 def draw_interface(score, delta = 0):
     pygame.draw.rect(screen, WHITE, TITLE_REC)  
@@ -52,6 +61,7 @@ COLORS = {
     2048: (128, 128, 255)
 }
 
+USERNAME = None
 WHITE = (255, 255, 255)
 GRAY = (130, 130, 130)
 BLACK = (0, 0, 0)
@@ -69,8 +79,78 @@ mas[3][0]=4
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGTH))
 pygame.display.set_caption('2048')
+
+def draw_intro():
+    img2028 = pygame.image.load('2048_project\\dog.jpg')
+    font = pygame.font.SysFont('stxingkai', 72)
+    text_welcome = font.render('Welcome!', True, WHITE)
+    name = 'Введите имя'
+    is_find_name = False
+    while not is_find_name:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN:
+                if event.unicode.isalpha():
+                    if name == 'Введите имя':
+                        name = event.unicode
+                    else:
+                        name += event.unicode
+                elif event.key == pygame.K_BACKSPACE:
+                    if name == 'Введите имя':
+                        name = ''
+                    else:
+                        name = name[:-1]
+                elif event.key == pygame.K_RETURN:
+                    global USERNAME
+                    if len(name) > 2 and name != 'Введите имя':
+                        USERNAME = name
+                        is_find_name = True
+                        break
+                    else:
+                        USERNAME = 'Чмо'
+                        is_find_name = True
+                        break
+
+        screen.fill(BLACK)
+        text_name = font.render(name, True, WHITE)
+        rect_name = text_name.get_rect()
+        rect_name.center = screen.get_rect().center
+        screen.blit(pygame.transform.scale(img2028, (200, 250)), (10, 10))
+        screen.blit(text_welcome, (235, 120))
+        screen.blit(text_name, rect_name)
+        pygame.display.update()
+
+def draw_game_over():
+    img2028 = pygame.image.load('2048_project\\dog.jpg')
+    font = pygame.font.SysFont('stxingkai', 65)
+    text_game_over = font.render('Game over!', True, WHITE)
+    text_score = font.render(f'Вы набрали {score}', True, WHITE)
+    best_score = GAMERS_DB[0][1]
+    if score > best_score:
+        text = 'Рекорд побит'
+    else:
+        text = f'Рекорд {best_score}'
+    text_record = font.render(text, True, WHITE)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+        screen.fill(BLACK)
+        screen.blit(text_game_over, (220, 120))
+        screen.blit(text_score, (30, 250))
+        screen.blit(text_record, (30, 300))
+        screen.blit(pygame.transform.scale(img2028, (200, 250)), (10, 10))
+        pygame.display.update()
+
+draw_intro()
+screen.fill(BLACK)
 draw_interface(score)
 pygame.display.update()
+
 while is_zero_in_mas(mas) or can_move(mas):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -86,12 +166,15 @@ while is_zero_in_mas(mas) or can_move(mas):
                 mas, delta = move_up(mas)
             elif event.key == pygame.K_DOWN:
                 mas, delta = move_down(mas)
-            empty = get_empty_list(mas)
-            random.shuffle(empty)
-            random_num = empty.pop()
-            x, y = get_index_from_number(random_num)
-            mas = insert_2_of_4(mas, x, y)
-            print(f'Мы заполнили элемент под номером {random_num}')
+            if is_zero_in_mas(mas):
+                empty = get_empty_list(mas)
+                random.shuffle(empty)
+                random_num = empty.pop()
+                x, y = get_index_from_number(random_num)
+                mas = insert_2_of_4(mas, x, y)
+                print(f'Мы заполнили элемент под номером {random_num}')
             score += delta
             draw_interface(score, delta)
             pygame.display.update()
+
+draw_game_over()

@@ -14,8 +14,7 @@ def get_best():
     cur.execute("""
     SELECT name gamer, max(score) score from RECORDS
     GROUP by name
-    ORDER bt score DESC
-    limit 3
+    ORDER by score DESC
+    limit 0
     """)
     return cur.fetchall()
-
