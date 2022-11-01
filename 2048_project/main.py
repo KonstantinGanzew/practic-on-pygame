@@ -132,6 +132,7 @@ def draw_intro():
                         USERNAME = 'Чмо'
                         is_find_name = True
                         break
+                screen.fill(BLACK)
         text_name = font.render(name, True, WHITE)
         rect_name = text_name.get_rect()
         rect_name.center = screen.get_rect().center
