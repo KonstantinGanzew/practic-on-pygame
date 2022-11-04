@@ -4,7 +4,7 @@ import random
 import pygame_menu
 
 pygame.init()
-bg_image = pygame.image.load('snake_logo.jpg')
+bg_image = pygame.image.load('snake_logo.png')
 SIZE_BLOCK = 20
 FRAME_COLOR = (0, 255, 204)
 WHITE = (255, 255, 255)
@@ -117,13 +117,13 @@ def start_the_game():
 
 
 main_theme = pygame_menu.themes.THEME_DARK.copy()
+main_theme.set_background_color_opacity(0.4)
 menu = pygame_menu.Menu('', 220, 220,
                        theme=main_theme)
 
 menu.add.text_input('Имя :', default='Игрок 1')
 menu.add.button('Играть', start_the_game)
 menu.add.button('Выход', pygame_menu.events.EXIT)
-menu.mainloop(screen)
 
 while True:
 
